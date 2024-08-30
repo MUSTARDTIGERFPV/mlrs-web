@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="" />
+    <title>mLRS Flasher</title>
+    <script src="mlrs.js"></script>
+    <script src="dfu.js"></script>
+    <script src="dfuse.js"></script>
+    <script src="FileSaver.js"></script>
+    <script src="dfu-util.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      p.warning {
+        color: red;
+      }
+      p.error {
+        color: red;
+        font-weight: bold;
+      }
+      label.radio {
+        display: inline;
+      }
+      input:invalid {
+        color:red;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-900 flex items-center justify-center min-h-screen">
+    <div class="container w-3/5">
+        <!-- Header Card -->
+        <div class="bg-slate-800 border border-sky-600 shadow-md rounded-lg p-6 mb-6 max-w-lg mx-auto">
+            <h1 class="text-3xl font-extrabold text-slate-200 mb-2">mLRS Web Flasher</h1>
+            <p class="text-slate-300">Easily flash your mLRS device with the tools provided below.</p>
+            <p class="text-slate-300">Please ensure your device is connected to your computer via USB before proceeding.</p>
+        </div>
+
+        <!-- Installation Card -->
+        <div class="bg-slate-800 border border-sky-600 shadow-md rounded-lg p-6 mb-6 max-w-lg mx-auto">
+            <h2 class="text-2xl font-semibold text-slate-200 mb-4">Installation</h2>
+            <p class="text-slate-300 mb-4">Select the channel and click the button below to update your mLRS. Follow the on-screen instructions to complete the installation.</p>
+            
+            <!-- Target Dropdown -->
+            <div class="py-6 mb-4">
+                <label for="channel" class="block text-slate-200 mb-2">Select Target:</label>
+                <select id="channel" class="bg-slate-700 text-slate-300 border border-sky-600 rounded-lg p-2 w-full">
+                    <!--<option value="firmware/release-matek/rx-matek-mr24-30-g431kb-v1.3.00.hex">Matek mR24-30</option>
+                    <option value="firmware/release-matek/rx-matek-mr900-22-wle5cc-v1.3.00.hex">Matek mR900-22</option>-->
+                </select>
+            </div>
+
+            <!-- Install Button -->
+            <div class="flex justify-center">
+	      <button id="connect" class="bg-blue-800 text-white font-semibold py-3 px-6 rounded-lg shadow hover:bg-blue-700 transition duration-300">Connect</button>
+            </div>
+            <div id="deviceInfoSection" class="hidden py-6">
+              <!--<h2 class="flex justify-center text-slate-300 mb-4">Device Info</h2>-->
+              <p id="status" class="text-slate-300 mb-4"></p>
+	      <p id="usbInfo" class="flex justify-center text-slate-300 mb-4"></p>
+	      <p id="dfuInfo" class="hidden text-slate-300 mb-4" style="white-space: pre"></p>
+            </div>
+            <div id="downloadSection" class="hidden py-6 flex justify-center">
+	      <button id="download" class="bg-green-800 text-white font-semibold py-3 px-6 rounded-lg shadow hover:bg-blue-700 transition duration-300">Install mLRS</button>
+            </div>
+            <div id="downloadLogSection" class="py-6 hidden">
+              <div id="downloadBarSection" class="py-6 px-4 border border-sky-800 rounded-lg">
+            </div>
+            <fieldset class="hidden">
+              <form id="configForm">
+                <input type="hidden" name="transferSize" id="transferSize" value="1024"/>
+                <div id="dfuseFields">
+                  <label for="dfuseStartAddress">DfuSe Start Address:</label>
+                  <input type="text" name="dfuseStartAddress" id="dfuseStartAddress" title="Initial memory address to read/write from (hex)" size="10" pattern="0x[A-Fa-f0-9]+"/>
+                  <label for="dfuseUploadSize">DfuSe Upload Size:</label>
+                  <input type="hidden" name="dfuseUploadSize" id="dfuseUploadSize" value="1024"/>
+                </div>
+              
+                <fieldset>
+                  <legend>Firmware Upload (read from USB device)</legend>
+                  <p>
+                    <button id="upload" disabled="true">Upload</button>
+                  </p>
+                  <div class="log" id="uploadLog"></div>
+                </fieldset>
+              </form>
+            </fieldset>
+        </div>
+      </div>
+
+      <!-- Additional Resources Card -->
+      <div class="bg-slate-800 border border-sky-600 shadow-md rounded-lg p-6 mb-6 max-w-lg mx-auto">
+          <h2 class="text-2xl font-semibold text-slate-200 mb-4">Additional Resources</h2>
+          <p class="text-slate-300">For further assistance, check out our documentation and support resources.</p>
+      </div>
+    </div>
+    <script>
+      const root = 'https://api.github.com/repos/olliw42/mLRS/git/trees/79c488b8843801c9128199e6505791ea684789a1?recursive=true'
+      document.addEventListener("DOMContentLoaded", function(event) {
+	      const files = getFilesFromTree(root)
+	      .then((files) => {
+	        files.forEach((f) => {
+                	// Create a new option element
+                	const option = document.createElement('option');
+                	
+                	// Set the option's display text and value
+                	option.textContent = f.name; // Friendly name of the file
+                	option.value = f.downloadUrl; // URL to download the file
+			option.setAttribute('data-accept-header', 'application/vnd.github.raw+json');
+			option.setAttribute('data-extension', f.extension);
+
+                	// Append the option to the select element with the ID 'channel'
+                	document.getElementById('channel').appendChild(option);
+	        });
+	      });
+      });
+    </script>
+  </body>
+</html>
