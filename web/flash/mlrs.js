@@ -78,10 +78,13 @@ async function getVersions() {
 
         // firmware_filename looks like pre-release-stm32/rx-E77-MBLKit-wle5cc-400-tcxo-v1.3.01-@ae667b78.hex
         // regex to get version and commit
-        var res = firmware_filename.split('.').slice(0, -1).join('.'); // remove extension
-        res = res.split('-').slice(-2).join('-'); // extract version part
+        //var res = firmware_filename.split('.').slice(0, -1).join('.'); // remove extension
+        //res = res.split('-').slice(-2).join('-'); // extract version part
+        // regex to get version and commit
+		var res = firmware_filename.match(/-(v\d\.\d+?\.\d+?-@.+?)\./)[1];
+        console.log(res);
 
-        // we could check if that is a dev version by odd pathc number, but let's believe that's the case
+        // we could check if that is a dev version by checking for odd patch number, but let's believe that's the case
 
         data[res] = {
             versionStr: res + ' (dev)',
