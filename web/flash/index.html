@@ -48,8 +48,17 @@
           <p class="text-slate-300">Please connect your device via USB to the computer before proceeding.</p>
           <p class="text-slate-300">Select the firmware and click the button below. Then select DFU mode and follow the on-screen instructions.</p>
 
-          <!-- Version Dropdown -->
+          <!-- Device Class Dropdown -->
           <div class="py-6">
+            <label for="device" class="block text-slate-200 mb-2">Select Device Type:</label>
+            <select id="device" class="bg-slate-700 text-slate-300 border border-sky-600 rounded-lg p-2 w-full">
+              <!--<option selected value="xyz">v1.3.00</option>
+              <option value="abc">v1.2.04</option>-->
+            </select>
+          </div>
+
+          <!-- Version Dropdown -->
+          <div class="mb-4">
             <label for="version" class="block text-slate-200 mb-2">Select Firmware Version:</label>
             <select id="version" class="bg-slate-700 text-slate-300 border border-sky-600 rounded-lg p-2 w-full">
               <!--<option selected value="xyz">v1.3.00</option>
@@ -116,52 +125,87 @@
     </div> <!-- End class="container w-3/5" -->
 
     <script>
-      document.addEventListener("DOMContentLoaded", function(event) {
-          // read the mlrs_firmware_urls.json to extract information on the versions
-          const versions = getVersions()
-          .then((versions) => {
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        // Create the device option list
+        const devices = getDevices()
+        .then((devices) => {
+            Object.keys(devices).forEach(key => {
+                //console.log(key);
+                //console.log(devices[key]);
+                const option = document.createElement('option');
+                option.textContent = key;
+                option.value = devices[key];
+                document.getElementById('device').appendChild(option);
+            });
+        });
+        document.getElementById('device').selectedIndex = 0; // select first option
+
+        // Read the mlrs_firmware_urls.json to extract information on the versions
+        const versions = getVersions()
+        .then((versions) => {
             Object.keys(versions).forEach(key => {
-                    //console.log(key);
-                    //console.log(versions[key]);
-                    //console.log(versions[key].commit);
-                    const option = document.createElement('option');
-                    option.textContent = key;
-                    option.value = versions[key].gitUrl;
-                    document.getElementById('version').appendChild(option);
+                //console.log(key);
+                //console.log(versions[key]);
+                //console.log(versions[key].commit);
+                const option = document.createElement('option');
+                option.textContent = versions[key].versionStr; //key;
+                option.value = versions[key].gitUrl;
+                document.getElementById('version').appendChild(option);
             });
 
             var version_element = document.getElementById('version');
             version_element.selectedIndex = 0; // select first option
-            version_element.dispatchEvent(new Event('change'));
-          });
-      });
+            version_element.dispatchEvent(new Event('change')); // throw a change event to update firmware list
+        });
+    });
 
-      // Add an event listener to load the available firmware files, depening on the selected version
-      var version_element = document.getElementById('version');
-      version_element.addEventListener('change', function() {
-          //console.log('version changed');
-          //console.log(version_element.selectedIndex);
-          //console.log(version_element.value);
-          const files = getFilesFromTree(version_element.value)
-          .then((files) => {
+    // Helper function to load the available firmware files, depening on the selected device and version
+    function updateFirmwareList(device, url) {
+        const files = getFilesFromTree(device, url)
+        .then((files) => {
             var channel_element = document.getElementById('channel');
             channel_element.options.length = 0;
+
+            if (files.length == 0) {
+                const option = document.createElement('option');
+                option.textContent = 'not available';
+                option.value = '';
+                option.setAttribute('data-accept-header', 'application/vnd.github.raw+json');
+                option.setAttribute('data-extension', '');
+                channel_element.appendChild(option);
+                return;
+            }
+
             files.forEach((f) => {
-                    // Create a new option element
-                    const option = document.createElement('option');
+                // Create a new option element
+                const option = document.createElement('option');
 
-                    // Set the option's display text and value
-                    option.textContent = f.name; // Friendly name of the file
-                    option.value = f.downloadUrl; // URL to download the file
-                    option.setAttribute('data-accept-header', 'application/vnd.github.raw+json');
-                    option.setAttribute('data-extension', f.extension);
+                // Set the option's display text and value
+                option.textContent = f.name; // Friendly name of the file
+                option.value = f.downloadUrl; // URL to download the file
+                option.setAttribute('data-accept-header', 'application/vnd.github.raw+json');
+                option.setAttribute('data-extension', f.extension);
 
-                    // Append the option to the select element with the ID 'channel'
-                    channel_element.appendChild(option);
+                // Append the option to the select element with the ID 'channel'
+                channel_element.appendChild(option);
             });
-          });
-      });
+        });
+    }
 
+    // Add event listeners to load the available firmware files, depening on the selected device and version
+    var device_element = document.getElementById('device');
+    var version_element = document.getElementById('version');
+
+    device_element.addEventListener('change',  function() {
+        updateFirmwareList(device_element.value, version_element.value);
+    });
+
+    version_element.addEventListener('change', function() {
+        //console.log(device_element.selectedIndex);
+        //console.log(device_element.value);
+        updateFirmwareList(device_element.value, version_element.value);
+    });
 
     </script>
   </body>
