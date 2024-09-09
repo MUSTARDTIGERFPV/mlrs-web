@@ -80,6 +80,14 @@ async function getFilesFromTree(device, url) {
             };
         });
 
+        if (files.length == 0) {
+            files.push({
+                name: 'not available',
+                extension: '',
+                downloadUrl: ''
+            });
+        }   
+
         return files;
     } catch (error) {
         console.error('Error fetching data:', error);

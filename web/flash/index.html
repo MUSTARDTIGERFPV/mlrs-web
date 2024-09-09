@@ -63,6 +63,7 @@
             <select id="version" class="bg-slate-700 text-slate-300 border border-sky-600 rounded-lg p-2 w-full">
               <!--<option selected value="xyz">v1.3.00</option>
               <option value="abc">v1.2.04</option>-->
+              <option value="downloading">downloading ...</option>
             </select>
           </div>
 
@@ -72,6 +73,7 @@
             <select id="channel" class="bg-slate-700 text-slate-300 border border-sky-600 rounded-lg p-2 w-full">
               <!--<option value="firmware/release-matek/rx-matek-mr24-30-g431kb-v1.3.00.hex">Matek mR24-30</option>
               <option value="firmware/release-matek/rx-matek-mr900-22-wle5cc-v1.3.00.hex">Matek mR900-22</option>-->
+              <option value="downloading">downloading ...</option>
             </select>
           </div>
 
@@ -144,6 +146,9 @@
         // Read the mlrs_firmware_urls.json to extract information on the versions
         const versions = getVersions()
         .then((versions) => {
+            var version_element = document.getElementById('version');
+            version_element.options.length = 0;
+        
             Object.keys(versions).forEach(key => {
                 //console.log(key);
                 //console.log(versions[key]);
@@ -151,10 +156,9 @@
                 const option = document.createElement('option');
                 option.textContent = versions[key].versionStr; //key;
                 option.value = versions[key].gitUrl;
-                document.getElementById('version').appendChild(option);
+                version_element.appendChild(option);
             });
 
-            var version_element = document.getElementById('version');
             version_element.selectedIndex = 0; // select first option
             version_element.dispatchEvent(new Event('change')); // throw a change event to update firmware list
         });
@@ -166,16 +170,6 @@
         .then((files) => {
             var channel_element = document.getElementById('channel');
             channel_element.options.length = 0;
-
-            if (files.length == 0) {
-                const option = document.createElement('option');
-                option.textContent = 'not available';
-                option.value = '';
-                option.setAttribute('data-accept-header', 'application/vnd.github.raw+json');
-                option.setAttribute('data-extension', '');
-                channel_element.appendChild(option);
-                return;
-            }
 
             files.forEach((f) => {
                 // Create a new option element
