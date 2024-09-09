@@ -25,8 +25,8 @@ async function getVersions() {
         const response = await fetch(url);
         const data = await response.json();
 
-        //console.log(response);
-        //console.log(data);
+        //console.log('response',response);
+        //console.log('data',data);
 
         //console.log('-----');
         Object.keys(data).forEach(key => {
@@ -55,6 +55,8 @@ async function getVersions() {
         const response_main = await fetch(url_main);
         const data_main = await response_main.json();
 
+        //console.log('data_main',data_main);
+
         const firmware_url = data_main.tree
         .filter(item => item.type == 'tree')
         .filter(item => item.path == 'firmware');
@@ -66,9 +68,13 @@ async function getVersions() {
         const response_firmware = await fetch(firmware_url[0].url + '?recursive=true');
         const data_firmware = await response_firmware.json();
 
+        //console.log('data_firmware',data_firmware);
+
         const firmware_files = data_firmware.tree
         .filter(item => item.type == 'blob')
         .filter(item => item.path.includes('-stm32'))
+
+        //console.log('firmware_files',firmware_files);
 
         if (firmware_files.length == 0) {
             return data; // argh, something is wrong
@@ -76,18 +82,22 @@ async function getVersions() {
 
         const firmware_filename = firmware_files[0].path;
 
+        //console.log('firmware_filename',firmware_filename);
+
         // firmware_filename looks like pre-release-stm32/rx-E77-MBLKit-wle5cc-400-tcxo-v1.3.01-@ae667b78.hex
         // regex to get version and commit
         //var res = firmware_filename.split('.').slice(0, -1).join('.'); // remove extension
         //res = res.split('-').slice(-2).join('-'); // extract version part
         // regex to get version and commit
-		var res = firmware_filename.match(/-(v\d\.\d+?\.\d+?-@.+?)\./)[1];
-        console.log(res);
+        var res = firmware_filename.match(/-(v\d\.\d+?\.\d+?-@.+?)\./);
+        //console.log(res);
 
-        // we could check if that is a dev version by checking for odd patch number, but let's believe that's the case
+        if (!res) {
+            return data; // probably not a dev but a pre-relase version, should we also check for odd patch?
+        }
 
         data[res] = {
-            versionStr: res + ' (dev)',
+            versionStr: res[1] + ' (dev)',
             gitUrl: url_main + '?recursive=true'
         };
 
