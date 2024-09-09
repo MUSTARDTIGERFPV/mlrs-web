@@ -48,6 +48,46 @@ async function getVersions() {
         });
         //console.log('-----');
 
+        // Figure out also the pre-release dev version. This needs work:
+        // We need to read the main json, to get the current firmware folder url,
+        // then read one file name in this folder, and extract the version part from the file name
+        const url_main = 'https://api.github.com/repos/olliw42/mLRS/git/trees/main';
+        const response_main = await fetch(url_main);
+        const data_main = await response_main.json();
+
+        const firmware_url = data_main.tree
+        .filter(item => item.type == 'tree')
+        .filter(item => item.path == 'firmware');
+
+        if (firmware_url.length != 1) {
+            return data; // argh, something is wrong
+        }
+
+        const response_firmware = await fetch(firmware_url[0].url + '?recursive=true');
+        const data_firmware = await response_firmware.json();
+
+        const firmware_files = data_firmware.tree
+        .filter(item => item.type == 'blob')
+        .filter(item => item.path.includes('-stm32'))
+
+        if (firmware_files.length == 0) {
+            return data; // argh, something is wrong
+        }
+
+        const firmware_filename = firmware_files[0].path;
+
+        // firmware_filename looks like pre-release-stm32/rx-E77-MBLKit-wle5cc-400-tcxo-v1.3.01-@ae667b78.hex
+        // regex to get version and commit
+        var res = firmware_filename.split('.').slice(0, -1).join('.'); // remove extension
+        res = res.split('-').slice(-2).join('-'); // extract version part
+
+        // we could check if that is a dev version by odd pathc number, but let's believe that's the case
+
+        data[res] = {
+            versionStr: res + ' (dev)',
+            gitUrl: url_main + '?recursive=true'
+        };
+
         return data;
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -86,7 +126,7 @@ async function getFilesFromTree(device, url) {
                 extension: '',
                 downloadUrl: ''
             });
-        }   
+        }
 
         return files;
     } catch (error) {
