@@ -12,7 +12,7 @@ async function getDevices() {
 
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('getDevices(): Error fetching data:', error);
         return [];
     }
 }
@@ -90,8 +90,11 @@ async function getVersions() {
 
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
-        return [];
+        console.error('getVersions(): Error fetching data:', error);
+        return [{
+            versionStr: 'sorry, error downloading',
+            gitUrl: ''
+        }];
     }
 }
 
@@ -130,7 +133,11 @@ async function getFilesFromTree(device, url) {
 
         return files;
     } catch (error) {
-        console.error('Error fetching data:', error);
-        return [];
+        console.error('getFilesFromTree(): Error fetching data:', error);
+        return [{
+            name: 'sorry, error downloading',
+            extension: '',
+            downloadUrl: ''
+        }];
     }
 }
